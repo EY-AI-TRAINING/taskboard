@@ -1,0 +1,40 @@
+# Configuration is read from the environment — nothing sensitive is committed.
+# Spring Boot binds these standard env vars with no extra wiring:
+#   SPRING_DATASOURCE_URL       jdbc:postgresql://localhost:5432/taskboard
+#   SPRING_DATASOURCE_USERNAME  postgres
+#   SPRING_DATASOURCE_PASSWORD  <your password>
+# The values below are dev defaults only.
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: taskboard-api
+  datasource:
+    url: jdbc:postgresql://localhost:5432/taskboard
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      # database/schema.sql owns the schema. Hibernate must not touch it.
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+taskboard:
+  frontend-origin: ${FRONTEND_ORIGIN:http://localhost:5173}
+
+# OpenAPI / Swagger UI (springdoc)
+#   Swagger UI   -> http://localhost:8080/swagger-ui.html
+#   OpenAPI JSON -> http://localhost:8080/v3/api-docs
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    display-request-duration: true
