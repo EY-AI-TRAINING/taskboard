@@ -11,6 +11,7 @@ import com.honeywell.taskboard.dto.TaskResponse;
 import com.honeywell.taskboard.dto.UpdateTaskRequest;
 import com.honeywell.taskboard.model.TaskItem;
 import com.honeywell.taskboard.model.TaskStatuses;
+import com.honeywell.taskboard.repository.CommentRepository;
 import com.honeywell.taskboard.repository.TaskRepository;
 import java.util.List;
 import java.util.Optional;
@@ -27,11 +28,14 @@ class TaskServiceImplTest {
     @Mock
     private TaskRepository repository;
 
+    @Mock
+    private CommentRepository comments;
+
     private TaskServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new TaskServiceImpl(repository);
+        service = new TaskServiceImpl(repository, comments);
     }
 
     private static TaskItem sample(int id, String status) {
@@ -46,6 +50,7 @@ class TaskServiceImplTest {
     void listPassesStatusFilterThrough() {
         when(repository.findByOptionalStatus("done"))
                 .thenReturn(List.of(sample(1, TaskStatuses.DONE)));
+        when(comments.countGroupedByTaskIds(List.of(1))).thenReturn(List.of());
 
         List<TaskResponse> result = service.list("done");
 

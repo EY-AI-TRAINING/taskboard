@@ -13,11 +13,16 @@ public record TaskResponse(
         @Schema(example = "todo", allowableValues = {"todo", "in-progress", "done"}) String status,
         @Schema(example = "Priya") String assignee,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt) {
+        LocalDateTime updatedAt,
+        @Schema(example = "2") Integer commentCount) {
 
     public static TaskResponse from(TaskItem t) {
+        return from(t, 0);
+    }
+
+    public static TaskResponse from(TaskItem t, long commentCount) {
         return new TaskResponse(
                 t.getId(), t.getTitle(), t.getDescription(), t.getStatus(),
-                t.getAssignee(), t.getCreatedAt(), t.getUpdatedAt());
+                t.getAssignee(), t.getCreatedAt(), t.getUpdatedAt(), (int) commentCount);
     }
 }

@@ -34,6 +34,16 @@ async def test_get_single_task(client, fake_repo):
     resp = await client.get(f"/api/tasks/{task.id}")
     assert resp.status_code == 200
     assert resp.json()["title"] == "Wire endpoint"
+    assert resp.json()["comment_count"] == 0
+
+
+async def test_list_includes_comment_count(client, fake_repo, fake_comments):
+    task = fake_repo.seed(title="Discuss")
+    fake_comments.seed(task.id, body="One")
+    fake_comments.seed(task.id, body="Two")
+    resp = await client.get("/api/tasks")
+    assert resp.status_code == 200
+    assert resp.json()[0]["comment_count"] == 2
 
 
 async def test_get_missing_task_returns_404(client):

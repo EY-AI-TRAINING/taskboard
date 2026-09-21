@@ -57,12 +57,15 @@ Base path `/api/tasks`. JSON in, JSON out.
 
 | Method | Path | Body | Success | Errors |
 |--------|------|------|---------|--------|
-| GET | `/api/tasks` | – | `200` array of tasks | `422` unknown `?status=` |
+| GET | `/api/tasks` | – | `200` array of tasks (includes `commentCount`) | `422` unknown `?status=` |
 | GET | `/api/tasks?status=todo` | – | `200` filtered array | `422` unknown status |
 | GET | `/api/tasks/{id}` | – | `200` task | `404` not found |
 | POST | `/api/tasks` | `{title, description?, status?, assignee?}` | `201` created task | `422` missing title / bad status |
 | PUT | `/api/tasks/{id}` | `{title, description?, status, assignee?}` | `200` updated task | `404`, `422` |
-| DELETE | `/api/tasks/{id}` | – | `204` no content | `404` not found |
+| DELETE | `/api/tasks/{id}` | – | `204` no content (comments cascade) | `404` not found |
+| GET | `/api/tasks/{id}/comments` | – | `200` array, oldest first | `404` task not found |
+| POST | `/api/tasks/{id}/comments` | `{author, body}` | `201` created comment | `404` task not found; `422` blank/too-long author or body |
+| DELETE | `/api/tasks/{id}/comments/{commentId}` | – | `204` no content | `404` task or comment not found |
 
 Plus `GET /health` → `200 {"status":"ok"}` on every backend.
 

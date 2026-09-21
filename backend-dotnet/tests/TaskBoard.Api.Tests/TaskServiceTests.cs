@@ -9,9 +9,15 @@ namespace TaskBoard.Api.Tests;
 public class TaskServiceTests
 {
     private readonly Mock<ITaskRepository> _repo = new();
+    private readonly Mock<ICommentRepository> _comments = new();
     private readonly TaskService _sut;
 
-    public TaskServiceTests() => _sut = new TaskService(_repo.Object);
+    public TaskServiceTests()
+    {
+        _comments.Setup(c => c.CountByTaskIdsAsync(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<int, int>());
+        _sut = new TaskService(_repo.Object, _comments.Object);
+    }
 
     private static TaskItem Sample(int id = 1, string status = TaskStatuses.Todo) => new()
     {

@@ -9,10 +9,11 @@ public record TaskResponse(
     string Status,
     string? Assignee,
     DateTime CreatedAt,
-    DateTime UpdatedAt)
+    DateTime UpdatedAt,
+    int CommentCount)
 {
-    public static TaskResponse From(TaskItem t) =>
-        new(t.Id, t.Title, t.Description, t.Status, t.Assignee, t.CreatedAt, t.UpdatedAt);
+    public static TaskResponse From(TaskItem t, int commentCount = 0) =>
+        new(t.Id, t.Title, t.Description, t.Status, t.Assignee, t.CreatedAt, t.UpdatedAt, commentCount);
 }
 
 public class CreateTaskRequest

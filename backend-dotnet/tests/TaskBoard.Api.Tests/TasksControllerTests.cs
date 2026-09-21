@@ -10,12 +10,13 @@ namespace TaskBoard.Api.Tests;
 public class TasksControllerTests
 {
     private readonly Mock<ITaskService> _service = new();
+    private readonly Mock<ICommentService> _comments = new();
     private readonly TasksController _sut;
 
-    public TasksControllerTests() => _sut = new TasksController(_service.Object);
+    public TasksControllerTests() => _sut = new TasksController(_service.Object, _comments.Object);
 
     private static TaskResponse Response(int id = 1) =>
-        new(id, "Sample", null, TaskStatuses.Todo, null, DateTime.UtcNow, DateTime.UtcNow);
+        new(id, "Sample", null, TaskStatuses.Todo, null, DateTime.UtcNow, DateTime.UtcNow, 0);
 
     [Fact]
     public async Task List_ReturnsOkWithTasks()
@@ -85,5 +86,21 @@ public class TasksControllerTests
         var result = await _sut.Delete(1, CancellationToken.None);
 
         Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task List_IncludesCommentCount()
+    {
+        _service.Setup(s => s.ListAsync(null, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<TaskResponse>
+                {
+                    new(1, "Sample", null, TaskStatuses.Todo, null, DateTime.UtcNow, DateTime.UtcNow, 3),
+                });
+
+        var action = await _sut.List(null, CancellationToken.None);
+
+        var ok = Assert.IsType<OkObjectResult>(action.Result);
+        var tasks = Assert.IsAssignableFrom<IReadOnlyList<TaskResponse>>(ok.Value);
+        Assert.Equal(3, tasks[0].CommentCount);
     }
 }

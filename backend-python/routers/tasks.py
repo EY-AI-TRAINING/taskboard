@@ -1,9 +1,11 @@
 """HTTP layer for /api/tasks. Translates domain errors into status codes."""
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 
-from dependencies import get_task_service
+from dependencies import get_comment_service, get_task_service
+from schemas.comment import CommentCreate, CommentRead
 from schemas.task import TaskCount, TaskCreate, TaskRead, TaskUpdate
-from services.errors import InvalidStatus, TaskNotFound
+from services.comment_service import CommentService
+from services.errors import CommentNotFound, InvalidComment, InvalidStatus, TaskNotFound
 from services.task_service import TaskService
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
@@ -78,5 +80,44 @@ async def delete_task(
     try:
         await service.delete_task(task_id)
     except TaskNotFound as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/{task_id}/comments", response_model=list[CommentRead])
+async def list_comments(
+    task_id: int,
+    service: CommentService = Depends(get_comment_service),
+) -> list[CommentRead]:
+    try:
+        comments = await service.list_comments(task_id)
+    except TaskNotFound as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return [CommentRead.model_validate(c) for c in comments]
+
+
+@router.post("/{task_id}/comments", response_model=CommentRead, status_code=status.HTTP_201_CREATED)
+async def create_comment(
+    task_id: int,
+    payload: CommentCreate,
+    service: CommentService = Depends(get_comment_service),
+) -> CommentRead:
+    try:
+        return CommentRead.model_validate(await service.create_comment(task_id, payload))
+    except TaskNotFound as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except InvalidComment as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.delete("/{task_id}/comments/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_comment(
+    task_id: int,
+    comment_id: int,
+    service: CommentService = Depends(get_comment_service),
+) -> Response:
+    try:
+        await service.delete_comment(task_id, comment_id)
+    except (TaskNotFound, CommentNotFound) as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -25,6 +25,7 @@ class TaskRead(TaskBase):
 
     id: int
     status: str
+    comment_count: int = 0
     created_at: datetime
     updated_at: datetime
 

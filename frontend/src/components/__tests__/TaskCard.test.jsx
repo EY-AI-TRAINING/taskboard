@@ -39,4 +39,108 @@ describe('TaskCard', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Delete' }))
     expect(onDelete).toHaveBeenCalledWith(baseTask)
   })
+
+  it('shows the comment control without a count when there are no comments', () => {
+    render(<TaskCard task={baseTask} onAdvance={vi.fn()} onDelete={vi.fn()} />)
+    expect(screen.getByRole('button', { name: '💬' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '💬 3' })).not.toBeInTheDocument()
+  })
+
+  it('shows the comment count when the task has comments', () => {
+    render(
+      <TaskCard
+        task={{ ...baseTask, commentCount: 3 }}
+        onAdvance={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    )
+    expect(screen.getByRole('button', { name: '💬 3' })).toBeInTheDocument()
+  })
+
+  it('expands the thread oldest-first and collapses it again', async () => {
+    const onToggle = vi.fn()
+    const comments = [
+      { id: 1, author: 'Ana', body: 'First', createdAt: '2026-09-21T09:00:00' },
+      { id: 2, author: 'Priya', body: 'Second', createdAt: '2026-09-21T10:00:00' },
+    ]
+    const { rerender } = render(
+      <TaskCard
+        task={{ ...baseTask, commentCount: 2 }}
+        comments={comments}
+        commentsOpen={false}
+        onAdvance={vi.fn()}
+        onDelete={vi.fn()}
+        onToggleComments={onToggle}
+      />,
+    )
+    expect(screen.queryByText('First')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: '💬 2' }))
+    expect(onToggle).toHaveBeenCalledWith({ ...baseTask, commentCount: 2 })
+
+    rerender(
+      <TaskCard
+        task={{ ...baseTask, commentCount: 2 }}
+        comments={comments}
+        commentsOpen
+        onAdvance={vi.fn()}
+        onDelete={vi.fn()}
+        onToggleComments={onToggle}
+      />,
+    )
+    const items = screen.getAllByRole('listitem')
+    expect(items[0]).toHaveTextContent('First')
+    expect(items[1]).toHaveTextContent('Second')
+
+    await userEvent.click(screen.getByRole('button', { name: '💬 2' }))
+    expect(onToggle).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not post when author or body is blank', async () => {
+    const onPost = vi.fn()
+    render(
+      <TaskCard
+        task={baseTask}
+        commentsOpen
+        onAdvance={vi.fn()}
+        onDelete={vi.fn()}
+        onPostComment={onPost}
+      />,
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Post' }))
+    expect(onPost).not.toHaveBeenCalled()
+  })
+
+  it('posts trimmed author and body', async () => {
+    const onPost = vi.fn()
+    render(
+      <TaskCard
+        task={baseTask}
+        commentsOpen
+        onAdvance={vi.fn()}
+        onDelete={vi.fn()}
+        onPostComment={onPost}
+      />,
+    )
+    await userEvent.type(screen.getByLabelText('Author'), '  Ana  ')
+    await userEvent.type(screen.getByLabelText('Comment'), '  Looks good  ')
+    await userEvent.click(screen.getByRole('button', { name: 'Post' }))
+    expect(onPost).toHaveBeenCalledWith(baseTask, { author: 'Ana', body: 'Looks good' })
+  })
+
+  it('deletes a comment without a confirm dialog', async () => {
+    const onDeleteComment = vi.fn()
+    const comment = { id: 8, author: 'Ana', body: 'Remove me', createdAt: '2026-09-21T09:00:00' }
+    render(
+      <TaskCard
+        task={{ ...baseTask, commentCount: 1 }}
+        comments={[comment]}
+        commentsOpen
+        onAdvance={vi.fn()}
+        onDelete={vi.fn()}
+        onDeleteComment={onDeleteComment}
+      />,
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Delete comment' }))
+    expect(onDeleteComment).toHaveBeenCalledWith({ ...baseTask, commentCount: 1 }, comment)
+  })
 })

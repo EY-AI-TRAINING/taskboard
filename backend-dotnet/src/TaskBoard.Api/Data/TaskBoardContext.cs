@@ -14,6 +14,7 @@ public class TaskBoardContext : DbContext
     }
 
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
+    public DbSet<CommentItem> Comments => Set<CommentItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,5 +32,19 @@ public class TaskBoardContext : DbContext
             .ValueGeneratedOnAdd();
         task.Property(t => t.UpdatedAt).HasColumnName("updated_at")
             .ValueGeneratedOnAddOrUpdate();
+
+        var comment = modelBuilder.Entity<CommentItem>();
+        comment.ToTable("comments");
+        comment.HasKey(c => c.Id);
+        comment.Property(c => c.Id).HasColumnName("id");
+        comment.Property(c => c.TaskId).HasColumnName("task_id");
+        comment.Property(c => c.Author).HasColumnName("author");
+        comment.Property(c => c.Body).HasColumnName("body");
+        comment.Property(c => c.CreatedAt).HasColumnName("created_at")
+            .ValueGeneratedOnAdd();
+        comment.HasOne<TaskItem>()
+            .WithMany()
+            .HasForeignKey(c => c.TaskId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -31,3 +31,8 @@ INSERT INTO tasks (title, description, status, assignee) VALUES
     ('Write the Module 01 retro notes',
      'Capture where AI assistance helped and where it needed correction.',
      'todo', NULL);
+
+INSERT INTO comments (task_id, author, body) VALUES
+    (3, 'Ana', 'Filter by status is working locally.'),
+    (4, 'Marco', 'The columns look right on desktop.'),
+    (4, 'Priya', 'Can we show a count on each card?');

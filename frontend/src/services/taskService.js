@@ -28,3 +28,17 @@ export async function updateTask(id, task) {
 export async function deleteTask(id) {
   await api.delete(`/api/tasks/${id}`)
 }
+
+export async function listComments(taskId) {
+  const { data } = await api.get(`/api/tasks/${taskId}/comments`)
+  return data
+}
+
+export async function createComment(taskId, comment) {
+  const { data } = await api.post(`/api/tasks/${taskId}/comments`, comment)
+  return data
+}
+
+export async function deleteComment(taskId, commentId) {
+  await api.delete(`/api/tasks/${taskId}/comments/${commentId}`)
+}

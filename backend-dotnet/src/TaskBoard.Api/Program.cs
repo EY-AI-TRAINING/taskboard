@@ -15,7 +15,9 @@ builder.Services.AddDbContext<TaskBoardContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
 
 // Allow the Vite dev server. Not "*" with credentials.
 const string DevCors = "dev-frontend";

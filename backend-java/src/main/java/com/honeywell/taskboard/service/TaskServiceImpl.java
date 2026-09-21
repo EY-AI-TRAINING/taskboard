@@ -5,8 +5,11 @@ import com.honeywell.taskboard.dto.TaskResponse;
 import com.honeywell.taskboard.dto.UpdateTaskRequest;
 import com.honeywell.taskboard.model.TaskItem;
 import com.honeywell.taskboard.model.TaskStatuses;
+import com.honeywell.taskboard.repository.CommentRepository;
 import com.honeywell.taskboard.repository.TaskRepository;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -16,9 +19,11 @@ import org.springframework.util.StringUtils;
 public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository repository;
+    private final CommentRepository comments;
 
-    public TaskServiceImpl(TaskRepository repository) {
+    public TaskServiceImpl(TaskRepository repository, CommentRepository comments) {
         this.repository = repository;
+        this.comments = comments;
     }
 
     private static void validateStatus(String status) {
@@ -34,15 +39,18 @@ public class TaskServiceImpl implements TaskService {
         if (filter != null) {
             validateStatus(filter);
         }
-        return repository.findByOptionalStatus(filter).stream()
-                .map(TaskResponse::from)
+        List<TaskItem> rows = repository.findByOptionalStatus(filter);
+        Map<Integer, Long> counts = countsFor(rows.stream().map(TaskItem::getId).toList());
+        return rows.stream()
+                .map(t -> TaskResponse.from(t, counts.getOrDefault(t.getId(), 0L)))
                 .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public TaskResponse get(int id) {
-        return TaskResponse.from(find(id));
+        TaskItem task = find(id);
+        return TaskResponse.from(task, comments.countByTaskId(id));
     }
 
     @Override
@@ -83,5 +91,18 @@ public class TaskServiceImpl implements TaskService {
 
     private TaskItem find(int id) {
         return repository.findById(id).orElseThrow(() -> new TaskNotFoundException(id));
+    }
+
+    private Map<Integer, Long> countsFor(List<Integer> ids) {
+        Map<Integer, Long> counts = new HashMap<>();
+        if (ids.isEmpty()) {
+            return counts;
+        }
+        for (Object[] row : comments.countGroupedByTaskIds(ids)) {
+            Integer taskId = (Integer) row[0];
+            long count = ((Number) row[1]).longValue();
+            counts.put(taskId, count);
+        }
+        return counts;
     }
 }
