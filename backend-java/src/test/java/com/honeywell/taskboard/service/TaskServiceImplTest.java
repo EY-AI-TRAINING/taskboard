@@ -105,6 +105,7 @@ class TaskServiceImplTest {
     void updateAppliesChanges() {
         when(repository.findById(1)).thenReturn(Optional.of(sample(1, TaskStatuses.TODO)));
         when(repository.saveAndFlush(any(TaskItem.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(comments.countByTaskId(1)).thenReturn(4L);
 
         TaskResponse result = service.update(1,
                 new UpdateTaskRequest("Changed", "d", TaskStatuses.IN_PROGRESS, "Ana"));
@@ -112,6 +113,7 @@ class TaskServiceImplTest {
         assertThat(result.title()).isEqualTo("Changed");
         assertThat(result.status()).isEqualTo(TaskStatuses.IN_PROGRESS);
         assertThat(result.assignee()).isEqualTo("Ana");
+        assertThat(result.commentCount()).isEqualTo(4);
     }
 
     @Test

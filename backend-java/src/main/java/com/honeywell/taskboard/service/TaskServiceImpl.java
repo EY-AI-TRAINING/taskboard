@@ -81,7 +81,8 @@ public class TaskServiceImpl implements TaskService {
 
         // flush now so Hibernate runs the follow-up SELECT for the
         // database-generated created_at / updated_at before we map the response.
-        return TaskResponse.from(repository.saveAndFlush(task));
+        TaskItem saved = repository.saveAndFlush(task);
+        return TaskResponse.from(saved, comments.countByTaskId(id));
     }
 
     @Override
