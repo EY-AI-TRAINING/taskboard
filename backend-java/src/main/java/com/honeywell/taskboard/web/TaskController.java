@@ -1,8 +1,11 @@
 package com.honeywell.taskboard.web;
 
+import com.honeywell.taskboard.dto.CommentResponse;
+import com.honeywell.taskboard.dto.CreateCommentRequest;
 import com.honeywell.taskboard.dto.CreateTaskRequest;
 import com.honeywell.taskboard.dto.TaskResponse;
 import com.honeywell.taskboard.dto.UpdateTaskRequest;
+import com.honeywell.taskboard.service.CommentService;
 import com.honeywell.taskboard.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,9 +33,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class TaskController {
 
     private final TaskService service;
+    private final CommentService comments;
 
-    public TaskController(TaskService service) {
+    public TaskController(TaskService service, CommentService comments) {
         this.service = service;
+        this.comments = comments;
     }
 
     @GetMapping
@@ -78,6 +83,35 @@ public class TaskController {
     @ApiResponse(responseCode = "404", description = "No task with that id", content = @Content)
     public ResponseEntity<Void> delete(@PathVariable int id) {
         service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/comments")
+    @Operation(summary = "List comments on a task, oldest first")
+    @ApiResponse(responseCode = "200", description = "Comments returned")
+    @ApiResponse(responseCode = "404", description = "No task with that id", content = @Content)
+    public List<CommentResponse> listComments(@PathVariable int id) {
+        return comments.list(id);
+    }
+
+    @PostMapping("/{id}/comments")
+    @Operation(summary = "Add a comment to a task")
+    @ApiResponse(responseCode = "201", description = "Comment created")
+    @ApiResponse(responseCode = "404", description = "No task with that id", content = @Content)
+    @ApiResponse(responseCode = "422", description = "Missing or invalid author/body", content = @Content)
+    public ResponseEntity<CommentResponse> createComment(
+            @PathVariable int id, @Valid @RequestBody CreateCommentRequest request) {
+        CommentResponse created = comments.create(id, request);
+        return ResponseEntity.created(URI.create("/api/tasks/" + id + "/comments/" + created.id()))
+                .body(created);
+    }
+
+    @DeleteMapping("/{id}/comments/{commentId}")
+    @Operation(summary = "Delete a comment")
+    @ApiResponse(responseCode = "204", description = "Comment deleted")
+    @ApiResponse(responseCode = "404", description = "No task or comment with that id", content = @Content)
+    public ResponseEntity<Void> deleteComment(@PathVariable int id, @PathVariable int commentId) {
+        comments.delete(id, commentId);
         return ResponseEntity.noContent().build();
     }
 }

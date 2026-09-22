@@ -11,6 +11,7 @@ import com.honeywell.taskboard.dto.TaskResponse;
 import com.honeywell.taskboard.dto.UpdateTaskRequest;
 import com.honeywell.taskboard.model.TaskItem;
 import com.honeywell.taskboard.model.TaskStatuses;
+import com.honeywell.taskboard.repository.CommentRepository;
 import com.honeywell.taskboard.repository.TaskRepository;
 import java.util.List;
 import java.util.Optional;
@@ -27,11 +28,14 @@ class TaskServiceImplTest {
     @Mock
     private TaskRepository repository;
 
+    @Mock
+    private CommentRepository comments;
+
     private TaskServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new TaskServiceImpl(repository);
+        service = new TaskServiceImpl(repository, comments);
     }
 
     private static TaskItem sample(int id, String status) {
@@ -46,6 +50,7 @@ class TaskServiceImplTest {
     void listPassesStatusFilterThrough() {
         when(repository.findByOptionalStatus("done"))
                 .thenReturn(List.of(sample(1, TaskStatuses.DONE)));
+        when(comments.countGroupedByTaskIds(List.of(1))).thenReturn(List.of());
 
         List<TaskResponse> result = service.list("done");
 
@@ -100,6 +105,7 @@ class TaskServiceImplTest {
     void updateAppliesChanges() {
         when(repository.findById(1)).thenReturn(Optional.of(sample(1, TaskStatuses.TODO)));
         when(repository.saveAndFlush(any(TaskItem.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(comments.countByTaskId(1)).thenReturn(4L);
 
         TaskResponse result = service.update(1,
                 new UpdateTaskRequest("Changed", "d", TaskStatuses.IN_PROGRESS, "Ana"));
@@ -107,6 +113,7 @@ class TaskServiceImplTest {
         assertThat(result.title()).isEqualTo("Changed");
         assertThat(result.status()).isEqualTo(TaskStatuses.IN_PROGRESS);
         assertThat(result.assignee()).isEqualTo("Ana");
+        assertThat(result.commentCount()).isEqualTo(4);
     }
 
     @Test

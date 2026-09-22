@@ -31,4 +31,23 @@ describe('taskService', () => {
     await taskService.deleteTask(3)
     expect(api.delete).toHaveBeenCalledWith('/api/tasks/3')
   })
+
+  it('lists comments for a task', async () => {
+    api.get.mockResolvedValue({ data: [] })
+    await taskService.listComments(4)
+    expect(api.get).toHaveBeenCalledWith('/api/tasks/4/comments')
+  })
+
+  it('posts a comment', async () => {
+    api.post.mockResolvedValue({ data: { id: 1, author: 'Ana', body: 'Hi' } })
+    const result = await taskService.createComment(4, { author: 'Ana', body: 'Hi' })
+    expect(api.post).toHaveBeenCalledWith('/api/tasks/4/comments', { author: 'Ana', body: 'Hi' })
+    expect(result.body).toBe('Hi')
+  })
+
+  it('deletes a comment', async () => {
+    api.delete.mockResolvedValue({})
+    await taskService.deleteComment(4, 2)
+    expect(api.delete).toHaveBeenCalledWith('/api/tasks/4/comments/2')
+  })
 })

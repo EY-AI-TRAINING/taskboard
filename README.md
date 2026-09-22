@@ -90,20 +90,23 @@ CREATE TABLE tasks (
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/tasks` | List all tasks (optional `?status=` filter) |
+| GET | `/api/tasks` | List all tasks (optional `?status=` filter; includes comment count) |
 | GET | `/api/tasks/{id}` | Get a single task |
 | POST | `/api/tasks` | Create a task |
 | PUT | `/api/tasks/{id}` | Update a task |
-| DELETE | `/api/tasks/{id}` | Delete a task |
+| DELETE | `/api/tasks/{id}` | Delete a task (comments cascade) |
+| GET | `/api/tasks/{id}/comments` | List comments on a task, oldest first |
+| POST | `/api/tasks/{id}/comments` | Add a comment (`author`, `body`) |
+| DELETE | `/api/tasks/{id}/comments/{commentId}` | Delete a comment |
 | GET | `/health` | Liveness check → `{"status":"ok"}` |
 
-Error contract: `404` for a missing id, `422` for a missing title or an unknown
-status. Full request/response detail is in
-[usecase.md](usecase.md#api-contract).
+Error contract: `404` for a missing id, `422` for a missing title, unknown
+status, or a blank/too-long comment author or body. Full request/response
+detail is in [docs/usecase.md](docs/usecase.md#api-contract).
 
-> The Python backend returns the timestamp keys as `created_at` / `updated_at`;
-> .NET and Java use `createdAt` / `updatedAt`. The board UI does not depend on
-> either.
+> The Python backend returns the timestamp keys as `created_at` / `updated_at` /
+> `task_id` / `comment_count`; .NET and Java use camelCase (`createdAt`,
+> `taskId`, `commentCount`). The board UI does not depend on either.
 
 ## Configuration
 

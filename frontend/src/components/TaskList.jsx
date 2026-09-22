@@ -3,7 +3,18 @@ import TaskCard from './TaskCard'
 
 // Renders the three Kanban columns. When a status filter is active, only the
 // matching column is shown.
-export default function TaskList({ tasks, filter, onAdvance, onDelete }) {
+export default function TaskList({
+  tasks,
+  filter,
+  onAdvance,
+  onDelete,
+  commentsByTask,
+  expandedTaskId,
+  onToggleComments,
+  onPostComment,
+  onDeleteComment,
+  commentError,
+}) {
   const columns = filter === 'all' ? STATUSES : [filter]
 
   return (
@@ -22,6 +33,12 @@ export default function TaskList({ tasks, filter, onAdvance, onDelete }) {
                 task={task}
                 onAdvance={onAdvance}
                 onDelete={onDelete}
+                comments={commentsByTask?.[task.id] ?? []}
+                commentsOpen={expandedTaskId === task.id}
+                onToggleComments={onToggleComments}
+                onPostComment={onPostComment}
+                onDeleteComment={onDeleteComment}
+                commentError={expandedTaskId === task.id ? commentError : null}
               />
             ))}
           </section>

@@ -9,8 +9,13 @@ namespace TaskBoard.Api.Controllers;
 public class TasksController : ControllerBase
 {
     private readonly ITaskService _service;
+    private readonly ICommentService _comments;
 
-    public TasksController(ITaskService service) => _service = service;
+    public TasksController(ITaskService service, ICommentService comments)
+    {
+        _service = service;
+        _comments = comments;
+    }
 
     /// <summary>List tasks, optionally filtered by <paramref name="status"/>.</summary>
     [HttpGet]
@@ -80,6 +85,56 @@ public class TasksController : ControllerBase
             return NoContent();
         }
         catch (TaskNotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+    }
+
+    [HttpGet("{id:int}/comments")]
+    public async Task<ActionResult<IReadOnlyList<CommentResponse>>> ListComments(int id, CancellationToken ct)
+    {
+        try
+        {
+            return Ok(await _comments.ListAsync(id, ct));
+        }
+        catch (TaskNotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+    }
+
+    [HttpPost("{id:int}/comments")]
+    public async Task<ActionResult<CommentResponse>> CreateComment(
+        int id, CreateCommentRequest request, CancellationToken ct)
+    {
+        try
+        {
+            var created = await _comments.CreateAsync(id, request, ct);
+            return CreatedAtAction(nameof(ListComments), new { id }, created);
+        }
+        catch (TaskNotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (InvalidCommentException ex)
+        {
+            return UnprocessableEntity(new { error = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id:int}/comments/{commentId:int}")]
+    public async Task<IActionResult> DeleteComment(int id, int commentId, CancellationToken ct)
+    {
+        try
+        {
+            await _comments.DeleteAsync(id, commentId, ct);
+            return NoContent();
+        }
+        catch (TaskNotFoundException ex)
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (CommentNotFoundException ex)
         {
             return NotFound(new { error = ex.Message });
         }

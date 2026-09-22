@@ -4,12 +4,13 @@ import pytest
 from schemas.task import TaskCreate, TaskUpdate
 from services.errors import InvalidStatus, TaskNotFound
 from services.task_service import TaskService
-from tests.conftest import FakeTaskRepository
+from tests.conftest import FakeCommentRepository, FakeTaskRepository
 
 
 @pytest.fixture
 def service() -> TaskService:
-    return TaskService(FakeTaskRepository())
+    tasks = FakeTaskRepository()
+    return TaskService(tasks, FakeCommentRepository(tasks))
 
 
 async def test_create_defaults_to_todo(service):
