@@ -1,8 +1,8 @@
 # Engineering Task Board
 
 A small, deliberately simple full-stack application used to demonstrate
-disciplined, AI-assisted engineering: GitHub Copilot enterprise customization
-and spec-driven development (SDD).
+disciplined, AI-assisted engineering: GitHub Copilot enterprise customization,
+Cursor project customization, and spec-driven development (SDD).
 
 The domain is a Kanban-style task board. Every piece of work is a **task** that
 moves through three columns — **To Do → In Progress → Done** — with full CRUD
@@ -35,8 +35,9 @@ The React app layers the same way: `components/` (presentational) → `pages/`
 (state + data fetching) → `services/` (all HTTP in one place).
 
 The engineering rules that keep these layers honest are in
-[`.github/copilot-instructions.md`](.github/copilot-instructions.md) and
-[`AGENTS.md`](AGENTS.md).
+[`.github/copilot-instructions.md`](.github/copilot-instructions.md),
+[`.cursor/rules/`](.cursor/rules/), and [`AGENTS.md`](AGENTS.md). The Cursor
+rules match the Copilot instructions.
 
 ## Repository layout
 
@@ -47,6 +48,7 @@ backend-python/     FastAPI backend       (requirements.txt, pytest.ini)
 frontend/           React + Vite single-page board
 database/           schema.sql (source of truth), seed.sql, migrations/
 .github/            Copilot customization: instructions, prompts, agents, skills
+.cursor/            Cursor customization: rules, commands, agents, skills, hooks
 usecase.md          Domain, data model, and full API contract
 AGENTS.md           Quick engineering rules for AI agents
 ```
@@ -296,3 +298,23 @@ to demonstrate:
 | `prompts/*.prompt.md` | Reusable prompts (`new-endpoint`, `impact-analysis`) |
 | `agents/*.agent.md` | Custom chat agents (e.g. `code-reviewer`) |
 | `skills/*/SKILL.md` | Agent skills (e.g. `test-coverage-report`) |
+
+## Cursor customization
+
+`.cursor/` holds the Cursor project customization, kept in step with the
+Copilot files above. [`AGENTS.md`](AGENTS.md) maps the two.
+
+Type `/` in Agent chat to run a command. Text after the command name is the
+prompt input (the same role as Copilot's `${input:...}` fields).
+
+| Path | Purpose |
+|------|---------|
+| `rules/engineering-standards.mdc` | Repository-wide engineering rules (always applied; same policy as `copilot-instructions.md`) |
+| `rules/frontend.mdc` | Path-scoped frontend rules (`frontend/**`) |
+| `rules/tests.mdc` | Path-scoped test rules |
+| `commands/*.md` | Slash commands (`/new-endpoint`, `/impact-analysis`), paired with `.github/prompts/` |
+| `agents/*.md` | Custom agents: the board UI refresh workflow (`board-ui-master` and its specialists) and `pr-reviewer-agent` |
+| `skills/*/SKILL.md` | Speckit skills (`speckit-specify`, `speckit-plan`, `speckit-tasks`, `speckit-implement`, and others) |
+| `hooks/*.py` | Guard scripts: deny reading `.env*` (except `.env.example`) and runtime schema generators |
+| `mcp.json` | Project MCP server (Atlassian Rovo) |
+| `workflow/002-board-ui-refresh.md` | Recorded Speckit run for the board UI refresh |
