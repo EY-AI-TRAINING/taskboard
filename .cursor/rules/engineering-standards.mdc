@@ -1,0 +1,41 @@
+---
+description: Core Task Board architecture, schema, error contract, and verification
+alwaysApply: true
+---
+
+# Engineering Task Board
+
+Kanban board: PostgreSQL + React + ONE backend (.NET, Python, or Java) behind a
+shared REST contract. Domain is small; keep layering and the contract honest.
+
+## Architecture — do not violate
+
+| Layer | Allowed | Never |
+|-------|---------|-------|
+| Controller / Router | HTTP <-> domain, map errors to status codes | Business rules, SQL |
+| Service | Validation, business rules | HTTP concerns, SQL |
+| Repository | ALL database access | Validation, HTTP |
+
+React: `components/` (presentational) → `pages/` (state + fetching) → `services/` (HTTP only).
+
+## Hard rules
+
+- Do not read `.env`, `.env.local`, or other `.env.*` (except `.env.example`), or secrets. Use the framework config system.
+- Schema is owned once in `database/schema.sql`. Do not add EF migrations, `Base.metadata.create_all()`, or `ddl-auto` other than `none`.
+- `created_at` / `updated_at` are set by the database, never the client.
+- `status` is exactly one of: `todo`, `in-progress`, `done`.
+- Error contract: `404` missing id; `422` missing title or unknown status. Do not invent other codes.
+- Any new endpoint gets a same-layer test before the change is done.
+
+## Conventions
+
+- Match the style of the file you edit; do not reformat untouched lines.
+- Keep the three backends behaviourally identical — same request/response shape.
+- Prefer editing an existing file over creating a new one.
+
+## Verify
+
+- .NET: `dotnet test` in `backend-dotnet/`
+- Python: `pytest` in `backend-python/`
+- Java: `./mvnw -B test` in `backend-java/`
+- Frontend: `npm test -- --run` in `frontend/`

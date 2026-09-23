@@ -27,26 +27,29 @@ export default function TaskForm({ onCreate }) {
   }
 
   return (
-    <form className="task-form" onSubmit={handleSubmit}>
-      <label>
-        Title
-        <input
-          value={form.title}
-          onChange={update('title')}
-          placeholder="e.g. Wire up the /api/tasks endpoint"
-        />
-      </label>
-      <label>
-        Description
-        <textarea value={form.description} onChange={update('description')} rows={2} />
-      </label>
-      <label>
-        Assignee
-        <input value={form.assignee} onChange={update('assignee')} />
-      </label>
-      <button type="submit" className="primary" disabled={!form.title.trim() || submitting}>
-        {submitting ? 'Adding…' : 'Add task'}
-      </button>
-    </form>
+    <details className="panel">
+      <summary>Add a task</summary>
+      <form className="task-form" onSubmit={handleSubmit}>
+        <label>
+          Title
+          <input
+            value={form.title}
+            onChange={update('title')}
+            placeholder="e.g. Wire up the /api/tasks endpoint"
+          />
+        </label>
+        <label>
+          Description
+          <textarea value={form.description} onChange={update('description')} rows={2} />
+        </label>
+        <label>
+          Assignee
+          <input value={form.assignee} onChange={update('assignee')} />
+        </label>
+        <button type="submit" className="primary" disabled={!form.title.trim() || submitting}>
+          {submitting ? 'Adding…' : 'Add task'}
+        </button>
+      </form>
+    </details>
   )
 }

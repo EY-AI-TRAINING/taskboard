@@ -1,0 +1,22 @@
+---
+description: React frontend layering, HTTP, status constants, and CSS
+globs: frontend/**
+alwaysApply: false
+---
+
+# Frontend conventions
+
+- All HTTP goes through `src/services/`. Components and pages never call `fetch` directly.
+- `src/components/` are presentational: props in, callbacks out, no data fetching.
+- Status values and column labels come from `src/constants.js`. Do not hard-code `todo` / `in-progress` / `done` in components.
+- Keep the existing plain-CSS approach in `index.css`. Do not add a CSS framework or styling library.
+
+```javascript
+// ❌ BAD — fetch in a component, hard-coded status
+await fetch('/api/tasks')
+if (task.status === 'todo') { ... }
+
+// ✅ GOOD — service + constants
+import { STATUSES, STATUS_LABELS } from '../constants'
+import { getTasks } from '../services/taskService'
+```

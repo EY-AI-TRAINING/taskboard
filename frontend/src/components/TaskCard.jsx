@@ -6,8 +6,47 @@ function commentCountOf(task) {
   return 0
 }
 
-function createdAtOf(comment) {
-  return comment.createdAt || comment.created_at
+function createdAtOf(entity) {
+  return entity.createdAt || entity.created_at
+}
+
+export function initialsOf(name) {
+  if (!name || !String(name).trim()) return ''
+  const words = String(name).trim().split(/\s+/).filter(Boolean)
+  if (words.length === 0) return ''
+  if (words.length === 1) return words[0][0].toUpperCase()
+  return (words[0][0] + words[1][0]).toUpperCase()
+}
+
+export function formatCreatedLine(iso, now = new Date()) {
+  if (!iso) return ''
+  const then = new Date(iso)
+  if (Number.isNaN(then.getTime())) return ''
+
+  const deltaMs = now.getTime() - then.getTime()
+  if (deltaMs < 60_000) return 'Created just now'
+
+  const deltaMin = Math.floor(deltaMs / 60_000)
+  if (deltaMin < 60) {
+    return deltaMin === 1 ? 'Created 1 minute ago' : `Created ${deltaMin} minutes ago`
+  }
+
+  const deltaHours = Math.floor(deltaMs / 3_600_000)
+  if (deltaHours < 24) {
+    return deltaHours === 1 ? 'Created 1 hour ago' : `Created ${deltaHours} hours ago`
+  }
+
+  const deltaDays = Math.floor(deltaMs / 86_400_000)
+  if (deltaDays <= 30) {
+    return deltaDays === 1 ? 'Created 1 day ago' : `Created ${deltaDays} days ago`
+  }
+
+  const dateStr = then.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+  return `Created ${dateStr}`
 }
 
 export function formatApproximateTime(iso, now = new Date()) {
@@ -40,6 +79,8 @@ export default function TaskCard({
   const currentIndex = STATUSES.indexOf(task.status)
   const nextStatus = STATUSES[currentIndex + 1]
   const count = commentCountOf(task)
+  const createdIso = createdAtOf(task)
+  const createdLine = formatCreatedLine(createdIso)
 
   function handlePost(event) {
     event.preventDefault()
@@ -56,16 +97,28 @@ export default function TaskCard({
     <article className="card" data-testid={`task-${task.id}`}>
       <h3>{task.title}</h3>
       {task.description && <p>{task.description}</p>}
-      <span className="assignee">
-        {task.assignee ? `Assigned to ${task.assignee}` : 'Unassigned'}
+      <span className="card__assignee">
+        <span className="chip" aria-hidden="true">
+          {initialsOf(task.assignee)}
+        </span>
+        <span className="visually-hidden">
+          {task.assignee ? `Assigned to ${task.assignee}` : 'Unassigned'}
+        </span>
       </span>
+      {createdLine && (
+        <time className="card-created" dateTime={createdIso}>
+          {createdLine}
+        </time>
+      )}
       <div className="card-actions">
         {nextStatus && (
-          <button onClick={() => onAdvance(task, nextStatus)}>
+          <button className="card-action card-action--move" onClick={() => onAdvance(task, nextStatus)}>
             Move to {STATUS_LABELS[nextStatus]}
           </button>
         )}
-        <button onClick={() => onDelete(task)}>Delete</button>
+        <button className="card-action card-action--delete" onClick={() => onDelete(task)}>
+          Delete
+        </button>
         <button
           className="comment-toggle"
           aria-expanded={commentsOpen}

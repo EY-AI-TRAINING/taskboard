@@ -1,0 +1,16 @@
+---
+description: How to write Task Board tests across .NET, Python, Java, and frontend
+globs: "**/*{test,Test,tests,Tests,_test}*.{cs,py,js,jsx,java}"
+alwaysApply: false
+---
+
+# Writing tests
+
+- Mirror the neighbouring test file: same framework, naming, and arrange/act/assert.
+  - .NET: xUnit + `WebApplicationFactory` for controller tests.
+  - Python: pytest + `httpx.AsyncClient` against the FastAPI app.
+  - Java: JUnit 5 + `@SpringBootTest` / `MockMvc`.
+  - Frontend: Vitest + Testing Library.
+- Every endpoint test covers: happy path, `404` for a missing id, and `422` for a missing title or unknown status.
+- Do not hit a real database. Use the existing in-memory / fixture setup from `conftest.py`, the test factory, or the repository fake already in the suite.
+- Name tests for the behaviour, not the method: `returns_422_when_title_missing`.
